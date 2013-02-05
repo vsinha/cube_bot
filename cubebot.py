@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
 	#read config file
 	config = configparser.ConfigParser()
-	config.read('config')
+	config.read('config.conf')
 
 	jid 	= config.get('cube', 'jid')
 	pw 		= config.get('cube', 'password')
