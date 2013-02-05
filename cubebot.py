@@ -1,6 +1,6 @@
 import getpass
 import logging
-from optparse import OptionParser
+import configparser
 import operator
 import random
 import sleekxmpp
@@ -13,6 +13,10 @@ if sys.version_info < (3, 0):
 else:
 	raw_input = input
 
+questions = ["hmmm?", "yes?", "what?"]
+
+pronouns = ["who", "who's", "what", "what's"]
+pronouns_set = set(pronouns)
 
 greetingwords = ["greetings", "hey", "hi", "hello", "sup", "yo", "hi there"]
 greetingwords_set = set(greetingwords)
@@ -20,75 +24,79 @@ greetingwords_set = set(greetingwords)
 swearwords = ["fuck", "suck"] #don't want cube being bullied
 swearwords_set = set(swearwords)
 
+passive_responses = ["reminisces about vietnam", "writes a gui using visual basic", "goes outside... just kidding"]
 
-class MUCBot (sleekxmpp.ClientXMPP):
+
+class CubeBot (sleekxmpp.ClientXMPP):
 
 	def __init__ (self, jid, password, room, nick):
 		sleekxmpp.ClientXMPP.__init__(self, jid, password)
 		self.room = room
 		self.nick = nick
-		self.add_event_handler("session_start", self.start) #begin receiving/responding
-		self.add_event_handler("groupchat_message", self.bot_message)  
-	
+		self.add_event_handler("session_start", self.start) 
+		self.add_event_handler("groupchat_message", self.bot_message)
+
+	#begin receiving/responding
 	def start(self, event):
 		self.get_roster()
 		self.send_presence()
 		self.plugin['xep_0045'].joinMUC(self.room, self.nick) #enable group chat
 
-
+ 	#parse incoming messages
 	def bot_message(self, msg):
-		#reply if username is mentioned
-		#always make sure the message we're replying to didn't come from self
 
-		#convert all input to lowercase
+		#preprocess input
 		message_body = [x.lower() for x in msg['body'].split()] 
 		human_nick = msg['mucnick'] # whoever we're responding to
 
+		#reply if username is mentioned
+		#always make sure the message we're replying to didn't come from self
 		if human_nick != self.nick and self.nick in message_body:
 
-			if any( word in greetingwords_set for word in message_body ):
+			if len(message_body) == 1: #self.nick is the only word!
+				response = random.choice(questions)
+
+			elif any( word in pronouns_set for word in message_body ): #introduce yourself
+				response = "/me is a chat bot"
+
+			elif any( word in greetingwords_set for word in message_body ):
 				response = random.choice(greetingwords) + ", " + human_nick
 
-			if any( word in swearwords_set for word in message_body):
+			elif any( word in swearwords_set for word in message_body ):
 				response = human_nick + ", your mother is a whore"
 
+			else:
+				response = "/me " + random.choice(passive_responses)
+			
+			#send finished response
 			self.send_message(mto=msg['from'].bare, mbody=response, mtype='groupchat')
 
-# TODO
-# fuck off cube
-# <user>, your <noun> is a <noun>
 
 
 if __name__ == '__main__':
-    # Setup the command line arguments.
-    optp = OptionParser()
 
-    # Output verbosity options.
-    optp.add_option('-q', '--quiet', help='set logging to ERROR',
-                    action='store_const', dest='loglevel',
-                    const=logging.ERROR, default=logging.INFO)
-    optp.add_option('-d', '--debug', help='set logging to DEBUG',
-                    action='store_const', dest='loglevel',
-                    const=logging.DEBUG, default=logging.INFO)
-    optp.add_option('-v', '--verbose', help='set logging to COMM',
-                    action='store_const', dest='loglevel',
-                    const=5, default=logging.INFO)
+	#read config file
+	config = configparser.ConfigParser()
+	config.read('config')
 
-    opts, args = optp.parse_args()
+	jid 	= config.get('cube', 'jid')
+	pw 		= config.get('cube', 'password')
+	server 	= config.get('cube', 'server')
+	nick 	= config.get('cube', 'nick')
 
-    # Setup logging.
-    logging.basicConfig(level=opts.loglevel,
-                        format='%(levelname)-8s %(message)s')
+	#setup logging
+	logging.basicConfig(level=logging.INFO,
+						format='%(levelname)-8s %(message)s')
 
-    # Setup the MUCBot and register plugins.
-    xmpp = MUCBot("cube@obnauticus.com", "chickentender23", "#emc2@conference.obnauticus.com", "cube")
-    xmpp.register_plugin('xep_0030') # Service Discovery
-    xmpp.register_plugin('xep_0045') # Multi-User Chat
-    xmpp.register_plugin('xep_0199') # XMPP Ping
+    # Setup the bot and register plugins.
+	xmpp = CubeBot(jid, pw, server, nick)
+	xmpp.register_plugin('xep_0030') # Service Discovery
+	xmpp.register_plugin('xep_0045') # Multi-User Chat
+	xmpp.register_plugin('xep_0199') # XMPP Ping
 
     # Connect to the XMPP server and start processing XMPP stanzas.
-    if xmpp.connect(('obnauticus.com', 5222)):
-        xmpp.process(block=True)
-        print("Done")
-    else:
-        print("Unable to connect.")
+	if xmpp.connect(('obnauticus.com', 5222)):
+		xmpp.process(block=True)
+		print("Done")
+	else:
+		print("Unable to connect.")
