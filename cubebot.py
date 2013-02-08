@@ -16,13 +16,16 @@ else:
 questions = ["hmmm?", "yes?", "what?"]
 
 pronouns = ["who", "who's", "what", "what's"]
-pronouns_set = set(pronouns)
+pronouns_set = set(pronouns) #sets are faster for 'x in s'
 
 greetingwords = ["greetings", "hey", "hi", "hello", "sup", "yo", "hi there"]
 greetingwords_set = set(greetingwords)
 
-swearwords = ["fuck", "suck"] #don't want cube being bullied
+swearwords = ["suck", "bitch", "fuck"] #don't want cube being bullied
 swearwords_set = set(swearwords)
+
+animalsounds = ["meow", "woof", "moo"]
+animalsounds_set = set(animalsounds)
 
 passive_responses = ["reminisces about vietnam", "writes a gui using visual basic", "goes outside... just kidding"]
 
@@ -34,7 +37,7 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		self.room = room
 		self.nick = nick
 		self.add_event_handler("session_start", self.start) 
-		self.add_event_handler("groupchat_message", self.bot_message)
+		self.add_event_handler("groupchat_message", self.messageHandler)
 
 	#begin receiving/responding
 	def start(self, event):
@@ -43,37 +46,54 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		self.plugin['xep_0045'].joinMUC(self.room, self.nick) #enable group chat
 
  	#parse incoming messages
-	def bot_message(self, msg):
+	def messageHandler(self, msg):
 
 		#preprocess input
 		message_body = [x.lower() for x in msg['body'].split()] 
 		human_nick = msg['mucnick'] # whoever we're responding to
+		response = "bleep bloop" #initialize response
 
-		#reply if username is mentioned
 		#always make sure the message we're replying to didn't come from self
-		if human_nick != self.nick and self.nick in message_body:
+		if human_nick != self.nick:
 
-			if len(message_body) == 1: #self.nick is the only word!
-				response = random.choice(questions)
+			#reply if username is mentioned
+			if self.nick in message_body:
 
-			elif any( word in pronouns_set for word in message_body ): #introduce yourself
-				response = "/me is a chat bot"
+				#self.nick is the only word, respond with a random question
+				if len(message_body) == 1: 
+					response = random.choice(questions)
 
-			elif any( word in greetingwords_set for word in message_body ):
-				response = random.choice(greetingwords) + ", " + human_nick
+				#who are you?
+				elif any( word in pronouns_set for word in message_body ): 
+					response = "/me is a chat bot"
 
-			elif any( word in swearwords_set for word in message_body ):
-				response = human_nick + ", your mother is a whore"
+				#say hello
+				elif any( word in greetingwords_set for word in message_body ):
+					response = random.choice(greetingwords) + ", " + human_nick
 
-			else:
-				response = "/me " + random.choice(passive_responses)
-			
-			#send finished response
-			self.send_message(mto=msg['from'].bare, mbody=response, mtype='groupchat')
+				#get angry
+				elif any( word in swearwords_set for word in message_body ):
+					response = human_nick + ", your mother is a whore"
+
+				#pretend to be doing something
+				else:
+					response = "/me " + random.choice(passive_responses)
+
+				#send finished response
+				self.send_message(mto=msg['from'].bare, mbody=response, mtype='groupchat')
+				logging.info("REPLY: " + response)
+
+			#reply if animal sounds are mentioned
+			if any( word in animalsounds_set for word in message_body ):
+				response = random.choice(animalsounds)
+				
+				#send finished response
+				self.send_message(mto=msg['from'].bare, mbody=response, mtype='groupchat')
+				logging.info("REPLY: " + response)
 
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': 
 
 	#read config file
 	config = configparser.ConfigParser()
@@ -85,8 +105,7 @@ if __name__ == '__main__':
 	nick 	= config.get('cube', 'nick')
 
 	#setup logging
-	logging.basicConfig(level=logging.INFO,
-						format='%(levelname)-8s %(message)s')
+	logging.basicConfig(level=logging.INFO, format='%(levelname)-8s %(message)s')
 
     # Setup the bot and register plugins.
 	xmpp = CubeBot(jid, pw, server, nick)
