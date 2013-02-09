@@ -3,6 +3,7 @@ import logging
 import configparser
 import operator
 import random
+import re
 import sleekxmpp
 import sys
 
@@ -91,6 +92,33 @@ class CubeBot (sleekxmpp.ClientXMPP):
 				self.send_message(mto=msg['from'].bare, mbody=response, mtype='groupchat')
 				logging.info("REPLY: " + response)
 
+
+class Markov:
+	
+	def __init__ (self):
+		pass
+
+	markov = dict()
+
+	def stripPunctuation (self, word):
+		res = re.search('(^[.\!]*)(.*?)([.\!]*)$', word)
+		return Word(res.group(1), res.group(2), res.group(3)) # begin punct, word, end punct
+	
+	def parseStringToDictionary (self, msg):
+		words = list(map(self.stripPunctuation, msg.split()))
+		for i in range(len(words) - 2):
+			self.markov[(words[i], words[i+1])] = words[i+2]
+
+	def printDictionary(self):
+		for key, value in self.markov.items():
+			print (key, value)
+
+class Word ():
+
+	def __init__ (self, prefix, word, postfix):
+		self.prefix = prefix
+		self.word = word
+		self.postfix = postfix
 
 
 if __name__ == '__main__': 
