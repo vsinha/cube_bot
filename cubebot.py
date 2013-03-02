@@ -1,7 +1,7 @@
-import getpass
+#import getpass
 import logging
 import configparser
-import operator
+#import operator
 import random
 import re
 import sleekxmpp
@@ -37,7 +37,7 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		sleekxmpp.ClientXMPP.__init__(self, jid, password)
 		self.room = room
 		self.nick = nick
-		self.add_event_handler("session_start", self.start) 
+		self.add_event_handler("session_start", self.start)
 		self.add_event_handler("groupchat_message", self.messageHandler)
 
 	#begin receiving/responding
@@ -50,7 +50,7 @@ class CubeBot (sleekxmpp.ClientXMPP):
 	def messageHandler(self, msg):
 
 		#preprocess input
-		message_body = [x.lower() for x in msg['body'].split()] 
+		message_body = [x.lower() for x in msg['body'].split()]
 		human_nick = msg['mucnick'] # whoever we're responding to
 		response = "bleep bloop" #initialize response
 
@@ -61,11 +61,11 @@ class CubeBot (sleekxmpp.ClientXMPP):
 			if self.nick in message_body:
 
 				#self.nick is the only word, respond with a random question
-				if len(message_body) == 1: 
+				if len(message_body) == 1:
 					response = random.choice(questions)
 
 				#who are you?
-				elif any( word in pronouns_set for word in message_body ): 
+				elif any( word in pronouns_set for word in message_body ):
 					response = "/me is a chat bot"
 
 				#say hello
@@ -87,14 +87,14 @@ class CubeBot (sleekxmpp.ClientXMPP):
 			#reply if animal sounds are mentioned
 			if any( word in animalsounds_set for word in message_body ):
 				response = random.choice(animalsounds)
-				
+
 				#send finished response
 				self.send_message(mto=msg['from'].bare, mbody=response, mtype='groupchat')
 				logging.info("REPLY: " + response)
 
 
 class Markov:
-	
+
 	def __init__ (self):
 		pass
 
@@ -103,15 +103,16 @@ class Markov:
 	def stripPunctuation (self, word):
 		res = re.search('(^[.\!]*)(.*?)([.\!]*)$', word)
 		return Word(res.group(1), res.group(2), res.group(3)) # begin punct, word, end punct
-	
+
 	def parseStringToDictionary (self, msg):
 		words = list(map(self.stripPunctuation, msg.split()))
 		for i in range(len(words) - 2):
 			self.markov[(words[i], words[i+1])] = words[i+2]
 
 	def printDictionary(self):
-		for key, value in self.markov.items():
-			print (key, value)
+		for key in self.markov.items():
+			print (key)
+			print (self.markov[key])
 
 class Word ():
 
@@ -120,8 +121,14 @@ class Word ():
 		self.word = word
 		self.postfix = postfix
 
+	def __str__ (self):
+		return (self.prefix + self.word + self.postfix)
 
-if __name__ == '__main__': 
+	def word (self):
+		return (self.word)
+
+
+if __name__ == '__main__':
 
 	#read config file
 	config = configparser.ConfigParser()
