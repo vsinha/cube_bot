@@ -52,7 +52,7 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		#preprocess input
 		message_body = [x.lower() for x in msg['body'].split()]
 		human_nick = msg['mucnick'] # whoever we're responding to
-		response = "bleep bloop" #initialize response
+		response = "beep boop" #initialize response
 
 		#always make sure the message we're replying to didn't come from self
 		if human_nick != self.nick:
@@ -80,15 +80,17 @@ class CubeBot (sleekxmpp.ClientXMPP):
 				else:
 					response = "/me " + random.choice(passive_responses)
 
-				#send finished response
-				self.send_message(mto=msg['from'].bare, mbody=response, mtype='groupchat')
-				logging.info("REPLY: " + response)
-
 			#reply if animal sounds are mentioned
 			if any( word in animalsounds_set for word in message_body ):
 				response = random.choice(animalsounds)
 
-				#send finished response
+			#change the topic if message starts with #
+			if message_body[0][0] == '#':
+				response = "/topic " + ' '.join(message_body)
+
+
+			#send finished response if it's been modified
+			if response != "beep boop":
 				self.send_message(mto=msg['from'].bare, mbody=response, mtype='groupchat')
 				logging.info("REPLY: " + response)
 
