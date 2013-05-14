@@ -3,7 +3,6 @@ import logging
 import configparser
 #import operator
 import random
-import re
 import sleekxmpp
 import sys
 
@@ -33,13 +32,13 @@ passive_responses = ["reminisces about vietnam", "writes a gui using visual basi
 
 class CubeBot (sleekxmpp.ClientXMPP):
 
-	def __init__ (self, jid, password, room, nick):
+	def __init__ (self, jid, password, room, nick, fileName):
 		sleekxmpp.ClientXMPP.__init__(self, jid, password)
 		self.room = room
 		self.nick = nick
 
 		#initialize markov chain with input file
-		inputFile = open('/home/viraj/cube_bot/text.txt')
+		inputFile = open(fileName)
 		self.markov = Markov(inputFile)
 
 		self.add_event_handler("session_start", self.start)
@@ -159,12 +158,13 @@ if __name__ == '__main__':
 	pw 		= config.get('cube', 'password')
 	server 	= config.get('cube', 'server')
 	nick 	= config.get('cube', 'nick')
+	fileName = config.get('cube', 'textFileName')
 
 	#setup logging
 	logging.basicConfig(level=logging.INFO, format='%(levelname)-8s %(message)s')
 
     # Setup the bot and register plugins.
-	xmpp = CubeBot(jid, pw, server, nick)
+	xmpp = CubeBot(jid, pw, server, nick, fileName)
 	xmpp.register_plugin('xep_0030') # Service Discovery
 	xmpp.register_plugin('xep_0045') # Multi-User Chat
 	xmpp.register_plugin('xep_0199') # XMPP Ping
