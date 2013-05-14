@@ -37,6 +37,11 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		sleekxmpp.ClientXMPP.__init__(self, jid, password)
 		self.room = room
 		self.nick = nick
+
+		#initialize markov chain with input file
+		inputFile = open('/home/viraj/cube_bot/text.txt')
+		self.markov = Markov(inputFile)
+
 		self.add_event_handler("session_start", self.start)
 		self.add_event_handler("groupchat_message", self.messageHandler)
 
@@ -62,7 +67,7 @@ class CubeBot (sleekxmpp.ClientXMPP):
 
 				#self.nick is the only word, respond with a random question
 				if len(message_body) == 1:
-					response = random.choice(questions)
+					response = self.markov.generateText()
 
 				#who are you?
 				elif any( word in pronouns_set for word in message_body ):
@@ -95,39 +100,53 @@ class CubeBot (sleekxmpp.ClientXMPP):
 				logging.info("REPLY: " + response)
 
 
-class Markov:
+class Markov(object):
 
-	def __init__ (self):
-		pass
+	def __init__ (self, inputFile):
+		logging.info("Generating markov cache")
 
-	markov = dict()
+		self.cache = {}
+		self.inputFile = inputFile
+		self.words = self.fileToWords()
+		self.wordSize = len(self.words)
+		logging.info("File has " + str(self.wordSize) + " words")
 
-	def stripPunctuation (self, word):
-		res = re.search('(^[.\!]*)(.*?)([.\!]*)$', word)
-		return Word(res.group(1), res.group(2), res.group(3)) # begin punct, word, end punct
+		self.database()
 
-	def parseStringToDictionary (self, msg):
-		words = list(map(self.stripPunctuation, msg.split()))
-		for i in range(len(words) - 2):
-			self.markov[(words[i], words[i+1])] = words[i+2]
+	def fileToWords(self):
+		self.inputFile.seek(0)
+		data = self.inputFile.read()
+		words = data.split()
+		return words
 
-	def printDictionary(self):
-		for key in self.markov.items():
-			print (key)
-			print (self.markov[key])
+	def tripletGenerator(self):
+		if len(self.words) < 3:
+			return
 
-class Word ():
+		for i in range(len(self.words) - 2):
+			#generator, so we're independent of input file size
+			yield (self.words[i], self.words[i+1], self.words[i+2])
+	
+	def database(self):
+		for w1, w2, w3 in self.tripletGenerator():
+			key = (w1, w2)
+			if key in self.cache: #if we've already seen this key pair
+				self.cache[key].append(w3)
+			else:
+				self.cache[key] = [w3]
 
-	def __init__ (self, prefix, word, postfix):
-		self.prefix = prefix
-		self.word = word
-		self.postfix = postfix
+	def generateText(self, size = 25):
+		seed = random.randint(0, self.wordSize-3)
+		seedWord = self.words[seed]
+		nextWord = self.words[seed+1]
+		w1, w2 = seedWord, nextWord
 
-	def __str__ (self):
-		return (self.prefix + self.word + self.postfix)
-
-	def word (self):
-		return (self.word)
+		outputWords = []
+		for i in range(size):
+			outputWords.append(w1)
+			w1, w2 = w2, random.choice(self.cache[(w1, w2)])
+			outputWords.append(w2)
+		return ' '.join(outputWords)
 
 
 if __name__ == '__main__':
@@ -149,6 +168,7 @@ if __name__ == '__main__':
 	xmpp.register_plugin('xep_0030') # Service Discovery
 	xmpp.register_plugin('xep_0045') # Multi-User Chat
 	xmpp.register_plugin('xep_0199') # XMPP Ping
+
 
     # Connect to the XMPP server and start processing XMPP stanzas.
 	if xmpp.connect(('obnauticus.com', 5222)):
