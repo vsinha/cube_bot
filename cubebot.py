@@ -61,12 +61,15 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		#always make sure the message we're replying to didn't come from self
 		if human_nick != self.nick:
 
+
 			#reply if username is mentioned
 			if self.nick in message_body:
 
+				response = self.markov.generateText()
 				#self.nick is the only word, respond with a random question
+				"""
 				if len(message_body) == 1:
-					response = self.markov.generateText()
+					pass
 
 				#who are you?
 				elif any( word in pronouns_set for word in message_body ):
@@ -83,14 +86,19 @@ class CubeBot (sleekxmpp.ClientXMPP):
 				#pretend to be doing something
 				else:
 					response = "/me " + random.choice(passive_responses)
+					"""
 
 			#reply if animal sounds are mentioned
-			if any( word in animalsounds_set for word in message_body ):
+			elif any( word in animalsounds_set for word in message_body ):
 				response = random.choice(animalsounds)
 
 			#change the topic if message starts with #
-			if message_body[0][0] == '#':
+			elif message_body[0][0] == '#':
 				response = "/topic " + ' '.join(message_body)
+
+			else:
+				self.markov.addNewSentence(message_body)
+
 
 
 			#send finished response if it's been modified
@@ -102,21 +110,35 @@ class CubeBot (sleekxmpp.ClientXMPP):
 class Markov(object):
 
 	def __init__ (self, inputFile):
-		logging.info("Generating markov cache")
-
 		self.cache = {}
+		"""logging.info("Generating markov cache")
+
 		self.inputFile = inputFile
 		self.words = self.fileToWords()
 		self.wordSize = len(self.words)
 		logging.info("File has " + str(self.wordSize) + " words")
 
 		self.database()
+		"""
+		pass
 
 	def fileToWords(self):
 		self.inputFile.seek(0)
 		data = self.inputFile.read()
-		words = data.split()
+		words = data.lower().split()
 		return words
+
+	def sentenceToWords(self, words):
+		words.insert(0, '__FIRST__') #prepend special word
+		words.append('__END__') #and append
+		return words
+
+	def addNewSentence(self, sentence):
+		logging.info("adding new sentence: " + ' '.join(sentence))
+		self.words = self.sentenceToWords(sentence)
+		self.wordSize = len(self.cache) #our cache grows as we add sentences
+		self.database()
+
 
 	def tripletGenerator(self):
 		if len(self.words) < 3:
@@ -135,17 +157,29 @@ class Markov(object):
 				self.cache[key] = [w3]
 
 	def generateText(self, size = 25):
-		seed = random.randint(0, self.wordSize-3)
-		seedWord = self.words[seed]
-		nextWord = self.words[seed+1]
-		w1, w2 = seedWord, nextWord
 
+		firstFlag = ' '
+		while firstFlag != '__FIRST__':
+			startwords = random.choice(list(self.cache.keys()))
+			firstFlag, w1 = startwords
+		w2list = random.choice(self.cache[(firstFlag, w1)]) # make sure we always pick an appropriate starting place		
+		w2 = ''.join(w2list)
+			
+		#print (w1 + ", " + w2)
 		outputWords = []
-		for i in range(size):
+
+		while True:
 			outputWords.append(w1)
-			w1, w2 = w2, random.choice(self.cache[(w1, w2)])
-			outputWords.append(w2)
-		return ' '.join(outputWords)
+			try:
+				w1, w2 = w2, random.choice(self.cache[(w1, w2)])
+			except KeyError:
+				#we've looked up a pair where the second word is __END__
+				return ' '.join(outputWords) #don't append the same word twice
+
+			#print (w1 + ", " + w2)
+			if w2 == '__END__':
+				outputWords.append(w1)
+				return ' '.join(outputWords)
 
 
 if __name__ == '__main__':
