@@ -1,7 +1,7 @@
-#import getpass
-import logging
+import atexit
 import configparser
-#import operator
+import logging
+import pickle
 import random
 import sleekxmpp
 import sys
@@ -13,22 +13,8 @@ if sys.version_info < (3, 0):
 else:
 	raw_input = input
 
-questions = ["hmmm?", "yes?", "what?"]
-
-pronouns = ["who", "who's", "what", "what's"]
-pronouns_set = set(pronouns) #sets are faster for 'x in s'
-
-greetingwords = ["greetings", "hey", "hi", "hello", "sup", "yo", "hi there"]
-greetingwords_set = set(greetingwords)
-
-swearwords = ["suck", "bitch", "fuck"] #don't want cube being bullied
-swearwords_set = set(swearwords)
-
 animalsounds = ["meow", "woof", "moo"]
 animalsounds_set = set(animalsounds)
-
-passive_responses = ["reminisces about vietnam", "writes a gui using visual basic", "goes outside... just kidding"]
-
 
 class CubeBot (sleekxmpp.ClientXMPP):
 
@@ -54,7 +40,7 @@ class CubeBot (sleekxmpp.ClientXMPP):
 	def messageHandler(self, msg):
 
 		#preprocess input
-		message_body = [x.lower() for x in msg['body'].split()]
+		message_body = msg['body'].split()
 		human_nick = msg['mucnick'] # whoever we're responding to
 		response = "beep boop" #initialize response
 
@@ -99,8 +85,6 @@ class CubeBot (sleekxmpp.ClientXMPP):
 			else:
 				self.markov.addNewSentence(message_body)
 
-
-
 			#send finished response if it's been modified
 			if response != "beep boop":
 				self.send_message(mto=msg['from'].bare, mbody=response, mtype='groupchat')
@@ -110,7 +94,11 @@ class CubeBot (sleekxmpp.ClientXMPP):
 class Markov(object):
 
 	def __init__ (self, inputFile):
-		self.cache = {}
+		try: 
+			self.cache = pickle.load( open("save.p", "rb") )
+		except:
+			self.cache = {}
+
 		"""logging.info("Generating markov cache")
 
 		self.inputFile = inputFile
@@ -120,7 +108,11 @@ class Markov(object):
 
 		self.database()
 		"""
-		pass
+
+		atexit.register(self.saveCache)
+
+	def saveCache(self):
+		pickle.dump(self.cache, open("save.p", "wb"))
 
 	def fileToWords(self):
 		self.inputFile.seek(0)
@@ -202,6 +194,7 @@ if __name__ == '__main__':
 	xmpp.register_plugin('xep_0030') # Service Discovery
 	xmpp.register_plugin('xep_0045') # Multi-User Chat
 	xmpp.register_plugin('xep_0199') # XMPP Ping
+
 
 
     # Connect to the XMPP server and start processing XMPP stanzas.
