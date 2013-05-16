@@ -148,7 +148,7 @@ class Markov(object):
 		self.database()
 
 		#save the cache every n messages
-		n = 50
+		n = 20
 		self.counter += 1
 		if self.counter % n == 0:
 			self.saveCache()
