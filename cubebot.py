@@ -50,7 +50,7 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		regex = re.compile('[%s]' % re.escape(string.punctuation))
 		message_no_punct = []
 		for word in message_body:
-		 	message_no_punct.append(regex.sub('', word))
+		 	message_no_punct.append(regex.sub('', word).lower())
 
 		#always make sure the message we're replying to didn't come from self
 		if human_nick != self.nick:
