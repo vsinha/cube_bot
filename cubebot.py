@@ -109,7 +109,11 @@ class Markov(object):
 		except:
 			self.cache = {}
 
-		"""logging.info("Generating markov cache")
+		self.counter = 0 #keep track of how many new entries to the db there have been
+
+		"""
+		#for importing text from a file
+		logging.info("Generating markov cache")
 
 		self.inputFile = inputFile
 		self.words = self.fileToWords()
@@ -140,7 +144,9 @@ class Markov(object):
 		self.words = self.sentenceToWords(sentence)
 		self.wordSize = len(self.cache) #our cache grows as we add sentences
 		self.database()
-
+		self.counter += 1
+		if self.counter % 50 == 0:
+			self.saveCache()
 
 	def tripletGenerator(self):
 		if len(self.words) < 3:
