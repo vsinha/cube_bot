@@ -84,10 +84,15 @@ class CubeBot (sleekxmpp.ClientXMPP):
 				response = random.choice(animalsounds)
 
 			#change the topic if message starts with #
+			#TODO: this doesn't work for some reason
 			elif message_body[0][0] == '#':
 				response = "/topic " + ' '.join(message_body)
 
 			else:
+				#if the first word is a username (ie, ends in ':') remove it before adding
+				if message_body[0].endswith(':'):
+					message_body.remove(message_body[0])
+
 				self.markov.addNewSentence(message_body)
 
 			#send finished response if it's been modified
