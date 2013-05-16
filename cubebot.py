@@ -3,6 +3,8 @@ import configparser
 import logging
 import pickle
 import random
+import re
+import string
 import sleekxmpp
 import sys
 
@@ -44,15 +46,18 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		human_nick = msg['mucnick'] # whoever we're responding to
 		response = "beep boop" #initialize response
 
+		#strip punctuation from message_body
+		regex = re.compile('[%s]' % re.escape(string.punctuation))
+		message_body_no_punctuation = regex.sub('', message_body)
+
 		#always make sure the message we're replying to didn't come from self
 		if human_nick != self.nick:
 
-
 			#reply if username is mentioned
-			if self.nick in message_body:
+			if self.nick in message_body_no_punctuation:
 
 				response = self.markov.generateText()
-				#self.nick is the only word, respond with a random question
+
 				"""
 				if len(message_body) == 1:
 					pass
