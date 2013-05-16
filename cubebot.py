@@ -48,13 +48,15 @@ class CubeBot (sleekxmpp.ClientXMPP):
 
 		#strip punctuation from message_body
 		regex = re.compile('[%s]' % re.escape(string.punctuation))
-		message_body_no_punctuation = regex.sub('', message_body)
+		message_no_punct = []
+		for word in message_body:
+		 	message_no_punct.append(regex.sub('', word))
 
 		#always make sure the message we're replying to didn't come from self
 		if human_nick != self.nick:
 
 			#reply if username is mentioned
-			if self.nick in message_body_no_punctuation:
+			if self.nick in message_no_punct:
 
 				response = self.markov.generateText()
 
@@ -144,8 +146,11 @@ class Markov(object):
 		self.words = self.sentenceToWords(sentence)
 		self.wordSize = len(self.cache) #our cache grows as we add sentences
 		self.database()
+
+		#save the cache every n messages
+		n = 50
 		self.counter += 1
-		if self.counter % 50 == 0:
+		if self.counter % n == 0:
 			self.saveCache()
 
 	def tripletGenerator(self):
