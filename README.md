@@ -1,8 +1,8 @@
-Cube: A markov chain generating text bot
+Cube
 ====
+### A markov chain chat bot
 
 ####Cube requires a file for settings:
-
 ```
 config.conf
 [cube]
