@@ -110,9 +110,12 @@ class CubeBot (sleekxmpp.ClientXMPP):
 				self.markov.addNewSentence(message_body)
 
 			#send finished response if it's been modified
-			if response != "":
-				self.send_message(mto=msg['from'].bare, mbody=response, mtype='groupchat')
-				logging.info("REPLY: " + response)
+			self.sendMessage(msg, response)
+	
+	def sendMessage(self, msg, response):
+		if response != "":
+			self.send_message(mto=msg['from'].bare, mbody=response, mtype='groupchat')
+			logging.info("REPLY: " + response)
 
 
 if __name__ == '__main__':
