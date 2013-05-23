@@ -1,9 +1,7 @@
-Cube
+Cube: A markov chain generating text bot
 ====
-##A markov chain generating text bot
 
-
-###Cube requires a file for settings:
+####Cube requires a file for settings:
 
 ```
 config.conf
