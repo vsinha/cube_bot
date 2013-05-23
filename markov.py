@@ -7,10 +7,10 @@ class Markov (object):
 
 	def __init__ (self, inputFile):
 		try: 
-			logging.info("loading cache")
+			logging.info("Loading cache")
 			self.cache = pickle.load( open("save.p", "rb") )
 		except:
-			logging.info("no cache found, creating a new one")
+			logging.info("No cache found, creating a new one")
 			self.cache = {}
 
 		self.counter = 0 #keep track of new entries to the db 
@@ -29,7 +29,7 @@ class Markov (object):
 
 
 	def saveCache(self):
-		logging.info("saving cache")
+		logging.info("Saving cache")
 		pickle.dump(self.cache, open("save.p", "wb"))
 
 	def fileToWords(self):
@@ -71,7 +71,7 @@ class Markov (object):
 			else:
 				self.cache[key] = [w3]
 
-	def generateText(self, size = 25):
+	def generateText(self):
 
 		firstFlag = ' '
 		while firstFlag != '__FIRST__':
