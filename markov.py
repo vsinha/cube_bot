@@ -3,21 +3,20 @@ import logging
 import pickle
 import random
 
-
-			
-
-
 class Markov (object):
 
 	def __init__ (self, inputFile):
 		try: 
+			logging.info("loading cache")
 			self.cache = pickle.load( open("save.p", "rb") )
 		except:
+			logging.info("no cache found, creating a new one")
 			self.cache = {}
 
-		self.counter = 0 #keep track of how many new entries to the db there have been
+		self.counter = 0 #keep track of new entries to the db 
+		atexit.register(self.saveCache) #initialize saving at exit
 
-		"""
+	def loadFile(self, inputFile):
 		#for importing text from a file
 		logging.info("Generating markov cache")
 
@@ -27,9 +26,7 @@ class Markov (object):
 		logging.info("File has " + str(self.wordSize) + " words")
 
 		self.database()
-		"""
 
-		atexit.register(self.saveCache)
 
 	def saveCache(self):
 		logging.info("saving cache")
