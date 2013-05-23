@@ -6,7 +6,7 @@ import string
 import sleekxmpp
 import sys
 
-from cube_bot import Markov
+from markov import Markov
 
 # ensure unicode is handled properly incase python is not v3.0
 if sys.version_info < (3, 0):
@@ -44,28 +44,29 @@ class CubeBot (sleekxmpp.ClientXMPP):
 	def removeItems(self, message):
 		#do all the operations!
 		message = self.removeParens(message)
-		message = self.removeAsteriskWords(message)
 		message = self.removeUsernames(message)
+		#message = self.removeAsteriskWords(message) #could return ""
 		return message
 
-	def removeParens(message):
-		message = re.sub('[\(\)\{\}<>]', '', message)
-		return message
+	def removeParens(self, message):
+		return [re.sub('[\(\)]', '', x) for x in message]
 
-	def removeUsernames(message):
+	def removeUsernames(self, message):
 		#if the first word is a username (ie, ends in ':'), remove it
 		if message[0].endswith(':'):
 			message.remove(message[0])
 		return message
 
-	def removeAsteriskWords(message):
+	def removeAsteriskWords(self, message):
 		#users correct typos with *word or word* generally
 		#we don't want cube repeating those
 		#TODO add a spellchecker so cube can exhibit this behavior correctly
-		if len(message.split()) == 1: #one word
-			if message.find('*') != 1: #with an asterisk
+		if len(message) == 1: #one word
+			if ' '.join(message).find('*') != -1: #with an asterisk
 				#return an empty string
 				return ""
+		else:
+			return message
 
 	def botNickInText(self, message):
 		#strip punctuation from message_body
@@ -73,29 +74,27 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		message_no_punct = []
 		for word in message:
 		 	message_no_punct.append(regex.sub('', word).lower())
-
 		return self.nick in message_no_punct
 
+	def sometimes():
+		return random.random() > 0.5
 	
  	#parse incoming messages
 	def messageHandler(self, msg):
 
 		#preprocess input
 		human_nick = msg['mucnick'] # whoever we're responding to
-		response = "beep boop" #initialize response
+		response = "" #initialize response
 
 		original_message_body = msg['body'].split()
 		message_body = self.removeItems(original_message_body)
-
-		if len(message_body.split()) == 0:
-			#message is empty, exit now and save ourselves the trouble
-			return
 
 		#always make sure the message we're replying to didn't come from self
 		if human_nick != self.nick:
 
 			#reply if username is mentioned
 			if self.botNickInText(original_message_body):
+				#TODO have cube respond sometimes() for multiple lines
 				response = self.markov.generateText()
 
 			#reply if animal sounds are mentioned
@@ -106,7 +105,7 @@ class CubeBot (sleekxmpp.ClientXMPP):
 				self.markov.addNewSentence(message_body)
 
 			#send finished response if it's been modified
-			if response != "beep boop":
+			if response != "":
 				self.send_message(mto=msg['from'].bare, mbody=response, mtype='groupchat')
 				logging.info("REPLY: " + response)
 
