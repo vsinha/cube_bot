@@ -45,7 +45,7 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		#do all the operations!
 		message = self.removeParens(message)
 		message = self.removeUsernames(message)
-		#message = self.removeAsteriskWords(message) #could return ""
+		message = self.removeAsteriskWords(message) #could return ""
 		return message
 
 	def removeParens(self, message):
@@ -62,9 +62,11 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		#we don't want cube repeating those
 		#TODO add a spellchecker so cube can exhibit this behavior correctly
 		if len(message) == 1: #one word
-			if ' '.join(message).find('*') != -1: #with an asterisk
+			if ' '.join(message).find('*') != -1: #contains an asterisk
 				#return an empty string
 				return ""
+			else:
+				return message
 		else:
 			return message
 
@@ -89,6 +91,9 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		original_message_body = msg['body'].split()
 		message_body = self.removeItems(original_message_body)
 
+		if message_body == "":
+			return
+
 		#always make sure the message we're replying to didn't come from self
 		if human_nick != self.nick:
 
@@ -97,11 +102,11 @@ class CubeBot (sleekxmpp.ClientXMPP):
 				#TODO have cube respond sometimes() for multiple lines
 				response = self.markov.generateText()
 
-			#reply if animal sounds are mentioned
+			#reply if animal sounds are mentioned :)
 			elif any( word in animalsounds_set for word in message_body ):
 				response = random.choice(animalsounds)
 
-			else:
+			else: #username is not mentioned
 				self.markov.addNewSentence(message_body)
 
 			#send finished response if it's been modified
