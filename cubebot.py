@@ -7,7 +7,6 @@ import sleekxmpp
 import sys
 
 from cube_bot import Markov
-from cube_bot import WordPool
 
 # ensure unicode is handled properly incase python is not v3.0
 if sys.version_info < (3, 0):
@@ -39,70 +38,77 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		self.send_presence()
 		self.plugin['xep_0045'].joinMUC(self.room, self.nick) #enable group chat
 
+	"""
+	some utility functions to process the message text
+	"""
+	def removeItems(self, message):
+		#do all the operations!
+		message = self.removeParens(message)
+		message = self.removeAsteriskWords(message)
+		message = self.removeUsernames(message)
+		return message
+
+	def removeParens(message):
+		message = re.sub('[\(\)\{\}<>]', '', message)
+		return message
+
+	def removeUsernames(message):
+		#if the first word is a username (ie, ends in ':'), remove it
+		if message[0].endswith(':'):
+			message.remove(message[0])
+		return message
+
+	def removeAsteriskWords(message):
+		#users correct typos with *word or word* generally
+		#we don't want cube repeating those
+		#TODO add a spellchecker so cube can exhibit this behavior correctly
+		if len(message.split()) == 1: #one word
+			if message.find('*') != 1: #with an asterisk
+				#return an empty string
+				return ""
+
+	def botNickInText(self, message):
+		#strip punctuation from message_body
+		regex = re.compile('[%s]' % re.escape(string.punctuation))
+		message_no_punct = []
+		for word in message:
+		 	message_no_punct.append(regex.sub('', word).lower())
+
+		return self.nick in message_no_punct
+
+	
  	#parse incoming messages
 	def messageHandler(self, msg):
 
 		#preprocess input
-		message_body = msg['body'].split()
 		human_nick = msg['mucnick'] # whoever we're responding to
 		response = "beep boop" #initialize response
 
-		#strip punctuation from message_body
-		regex = re.compile('[%s]' % re.escape(string.punctuation))
-		message_no_punct = []
-		for word in message_body:
-		 	message_no_punct.append(regex.sub('', word).lower())
+		original_message_body = msg['body'].split()
+		message_body = self.removeItems(original_message_body)
+
+		if len(message_body.split()) == 0:
+			#message is empty, exit now and save ourselves the trouble
+			return
 
 		#always make sure the message we're replying to didn't come from self
 		if human_nick != self.nick:
 
 			#reply if username is mentioned
-			if self.nick in message_no_punct:
-
+			if self.botNickInText(original_message_body):
 				response = self.markov.generateText()
-
-				"""
-				if len(message_body) == 1:
-					pass
-
-				#who are you?
-				elif any( word in pronouns_set for word in message_body ):
-					response = "/me is a chat bot"
-
-				#say hello
-				elif any( word in greetingwords_set for word in message_body ):
-					response = random.choice(greetingwords) + ", " + human_nick
-
-				#get angry
-				elif any( word in swearwords_set for word in message_body ):
-					response = human_nick + ", your mother is a whore"
-
-				#pretend to be doing something
-				else:
-					response = "/me " + random.choice(passive_responses)
-					"""
 
 			#reply if animal sounds are mentioned
 			elif any( word in animalsounds_set for word in message_body ):
 				response = random.choice(animalsounds)
 
-			#change the topic if message starts with #
-			#TODO: this doesn't work for some reason
-			elif message_body[0][0] == '#':
-				response = "/topic " + ' '.join(message_body)
-
 			else:
-				#if the first word is a username (ie, ends in ':') remove it before adding
-				if message_body[0].endswith(':'):
-					message_body.remove(message_body[0])
-
 				self.markov.addNewSentence(message_body)
 
 			#send finished response if it's been modified
 			if response != "beep boop":
 				self.send_message(mto=msg['from'].bare, mbody=response, mtype='groupchat')
 				logging.info("REPLY: " + response)
-
 
 
 if __name__ == '__main__':
