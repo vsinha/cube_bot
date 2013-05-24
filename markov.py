@@ -5,6 +5,8 @@ import random
 
 from collections import namedtuple
 from itertools import chain
+from bulbs.neo4jserver import Graph
+from graph import Key, Link
 from wordpool import WordPool
 
 cacheFfile = "saveforward.json" 
@@ -13,6 +15,10 @@ cacheRfile = "savereverse.json"
 class Markov (object):
 
 	def __init__ (self, inputFile = None):
+		self.g = Graph()
+		self.g.add_proxy("key", Key)
+		self.g.add_proxy("link", Link)
+
 		try: 
 			logging.info("Loading cache")
 			self.cacheF = json.load( open(cacheFfile, "r") )
@@ -57,7 +63,7 @@ class Markov (object):
 	def addNewSentence(self, sentence):
 		logging.info("adding new sentence: " + ' '.join(sentence))
 		self.words = self.sentenceToWords(sentence)
-		self.storeToDB()
+		self.storeToDatabase()
 
 		#save the cache every n messages
 		n = 20
@@ -66,41 +72,29 @@ class Markov (object):
 			self.saveCache()
 			self.counter = 0 #reset the counter
 
-	def forwardTripletGenerator(self):
+	def tripletGenerator(self):
 		#starts at the first word and goes forward
 		if len(self.words) < 3:
 			return
 
 		for i in range(len(self.words) - 2):
 			#generator, so we're independent of input file size
-			yield (self.words[i], self.words[i+1], self.words[i+2])
-	
-	#do the same thing as above, but from the end of the string
-	def reverseTripletGenerator(self):
-		if len(self.words) < 3:
-			return
+			triplet = [self.words[i], self.words[i+1], self.words[i+2]]
+			yield triplet
 
-		i = len(self.words) - 1 #index of last word, and goes backwards
-		while i >= 2:
-			yield (self.words[i], self.words[i-1], self.words[i-2])
-			i -= 1
+	def storeToDatabase(self):
+		last = ''
+		lastVertex = self.g.vertices.create(data = last)
 
-	def database(self, tripletGenerator, cache):
-		for w1, w2, w3 in tripletGenerator:
-			#TODO ditch this dict bs and use an actual database
-			#use a namedtuple for easy generating later
-			key = self.Key(key1 = w1, key2 = w2)
-			if key in cache: #if we've already seen this key pair
-				cache[key].append(w3)
-			else:
-				cache[key] = [w3]
+		#store triplet, and connect with previously stored one
+		for triplet in self.tripletGenerator():
+			current = ' '.join(triplet) #saving entries as strings (for now)
+			print(current)
+			currentVertex = self.g.vertices.create(data = current)
+			self.g.edges.create(lastVertex, "link", currentVertex)
+			lastVertex = currentVertex
 
-	#generate markov chains in both directions
-	def storeToDB(self):
-		self.database(self.forwardTripletGenerator(), self.cacheF)
-		self.database(self.reverseTripletGenerator(), self.cacheR)
-
-	def generateText2(self):
+	def generateText(self):
 		seedword = '__END__' #initialize wrong so we can enter the while loop
 		response = []
 
@@ -141,11 +135,11 @@ class Markov (object):
 				output.append(w2)
 				return output
 
-"""
+			"""
 			if w2 == '__END__':
 				output.append(w1)
 				return output
-				"""
+			"""
 
 if __name__ == '__main__':
 	m = Markov()
@@ -156,4 +150,4 @@ if __name__ == '__main__':
 	sentences.append("a truck has wheels")
 	for sentence in sentences:
 		m.addNewSentence(sentence.split())
-	m.generateText2()
+	#m.generateText()
