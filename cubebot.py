@@ -76,7 +76,8 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		message_no_punct = []
 		for word in message:
 		 	message_no_punct.append(regex.sub('', word).lower())
-		return self.nick in message_no_punct
+		#also check for possessive form (without the apostraphe)
+		return self.nick in message_no_punct or (self.nick + "s") in message_no_punct
 
 	def sometimes(self):
 		return random.random() > 0.5
