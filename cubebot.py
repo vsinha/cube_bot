@@ -78,7 +78,7 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		 	message_no_punct.append(regex.sub('', word).lower())
 		return self.nick in message_no_punct
 
-	def sometimes():
+	def sometimes(self):
 		return random.random() > 0.5
 	
  	#parse incoming messages
@@ -87,7 +87,7 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		#preprocess input
 		human_nick = msg['mucnick'] # whoever we're responding to
 		response = "" #initialize response
-
+		chatty = 0 #woken up by having its username mentioned
 		original_message_body = msg['body'].split()
 		message_body = self.removeItems(original_message_body)
 
@@ -99,8 +99,8 @@ class CubeBot (sleekxmpp.ClientXMPP):
 
 			#reply if username is mentioned
 			if self.botNickInText(original_message_body):
-				#TODO have cube respond sometimes() for multiple lines
 				response = self.markov.generateText()
+				chatty = random.randint(0, 3)
 
 			#reply if animal sounds are mentioned :)
 			elif any( word in animalsounds_set for word in message_body ):
@@ -108,6 +108,12 @@ class CubeBot (sleekxmpp.ClientXMPP):
 
 			else: #username is not mentioned
 				self.markov.addNewSentence(message_body)
+				if chatty:
+					if self.sometimes():
+						response = self.markov.generateText()
+						logging.info("AUTOREPLY")
+						chatty -= 1
+
 
 			#send finished response if it's been modified
 			self.sendMessage(msg, response)
@@ -138,8 +144,6 @@ if __name__ == '__main__':
 	xmpp.register_plugin('xep_0030') # Service Discovery
 	xmpp.register_plugin('xep_0045') # Multi-User Chat
 	xmpp.register_plugin('xep_0199') # XMPP Ping
-
-
 
     # Connect to the XMPP server and start processing XMPP stanzas.
 	if xmpp.connect(('obnauticus.com', 5222)):
