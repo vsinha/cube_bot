@@ -1,3 +1,6 @@
+#I knew there was a name for this thing!
+#it's a ring buffer
+
 class WordPool (object):
 	#we're keeping a list of recently used words
 
@@ -18,7 +21,7 @@ class WordPool (object):
 				if self.i >= self.poolsize:
 					self.i = 0
 	
-
+#for testing
 if __name__ == "__main__":
 	recent = WordPool(4)
 	sentence = "this is four words"
