@@ -18,7 +18,7 @@ else:
 animalsounds = ["meow", "woof", "moo"]
 animalsounds_set = set(animalsounds)
 
-stopwords = ["stop", "shut"]
+stopwords = ["stop", "shut", "silence", "stfu"]
 stopwords_set = set(stopwords)
 
 class CubeBot (sleekxmpp.ClientXMPP):
@@ -57,22 +57,29 @@ class CubeBot (sleekxmpp.ClientXMPP):
 
 	def removeUsernames(self, message):
 		#if the first word is a username (ie, ends in ':'), remove it
-		if message[0].endswith(':'):
-			message.remove(message[0])
+		try:
+			if message[0].endswith(':'):
+				message.remove(message[0])
+		except IndexError:
+			#means we've got an empty message
+			return
 		return message
 
 	def removeAsteriskWords(self, message):
 		#users correct typos with *word or word* generally
 		#we don't want cube repeating those
 		#TODO add a spellchecker so cube can exhibit this behavior correctly
-		if len(message) == 1: #one word
-			if ' '.join(message).find('*') != -1: #contains an asterisk
-				#return an empty string
-				return ""
+		try:
+			if len(message) == 1: #one word
+				if ' '.join(message).find('*') != -1: #contains an asterisk
+					#return an empty string
+					return ""
+				else:
+					return message
 			else:
 				return message
-		else:
-			return message
+		except TypeError: #we have an empty message
+			return
 
 	def botNickInText(self, message):
 		#strip punctuation from message_body
