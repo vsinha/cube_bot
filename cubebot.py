@@ -82,8 +82,12 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		 	message_no_punct.append(regex.sub('', word).lower())
 		return self.nick in message_no_punct or (self.nick + "s") in message_no_punct
 
-	def sometimes(self):
+	
+	def mosttimes(self):
 		return random.random() > 0.3
+
+	def sometimes(self):
+		return random.random() > 0.7
 	
  	#parse incoming messages
 	def messageHandler(self, msg):
