@@ -1,9 +1,8 @@
-#import atexit
+import atexit
 import logging
 import pickle
 import random
 
-from collections import namedtuple
 from itertools import chain
 #from wordpool import WordPool
 
@@ -22,10 +21,8 @@ class Markov (object):
 			self.cacheF = {}
 			self.cacheR = {}
 
-		
-		self.Key = namedtuple("Key", ["key1", "key2"])
 		self.counter = 0 #keep track of new entries to the db 
-		#atexit.register(self.saveCache) #initialize saving at exit
+		atexit.register(self.saveCache) #initialize saving at exit
 
 	#TODO get this to read chat log files
 	def loadFile(self, inputFile):
@@ -38,7 +35,6 @@ class Markov (object):
 		logging.info("File has " + str(self.wordSize) + " words")
 
 		self.storeToDB()
-
 
 	def fileToWords(self):
 		self.inputFile.seek(0)
@@ -63,7 +59,7 @@ class Markov (object):
 		n = 20
 		self.counter += 1
 		if self.counter % n == 0:
-			#self.saveCache()
+			self.saveCache()
 			self.counter = 0 #reset the counter
 
 	def saveCache(self):
@@ -87,7 +83,7 @@ class Markov (object):
 
 	storeToDB() calls database twice, passing in each generator and cache
 	"""
-	#TODO ditch this dict bs and use an actual database
+	#TODO ditch this dict stuff and use an actual database
 
 	#starts at the first word and goes forward
 	def forwardTripletGenerator(self):
@@ -112,7 +108,7 @@ class Markov (object):
 	def database(self, tripletGenerator, cache):
 		for w1, w2, w3 in tripletGenerator:
 			#use a namedtuple for easy generating later
-			key = self.Key(key1 = w1, key2 = w2)
+			key = ' '.join([w1, w2])
 			if key in cache: #if we've already seen this key pair
 				cache[key].append(w3)
 			else:
@@ -141,17 +137,14 @@ class Markov (object):
 		#start with a random word
 		#TODO add wordpool ring buffer functionality
 		seed = random.choice(list(self.cacheF.keys()))
-		print("seed: ", seed)
-		seedw1 = seed.key1
-		seedw2 = seed.key2
-
+		seedw1 = seed.split()[0]
+		seedw2 = seed.split()[1]
 
 		response.append(self.gen(seedw1, seedw2, self.cacheF))
 		#we're left with [["word", "word2"]], this removes the outer brakets
 		response = list(chain.from_iterable(response))
 		#delete first two words from response because these are the key
 		del response[0:2] 
-		print("second half: ", response)
 
 		second_half = self.gen(seedw2, seedw1, self.cacheR)
 		for word in second_half:
@@ -165,12 +158,12 @@ class Markov (object):
 		output = []
 		while True:
 			output.append(w1)
-			print(w1, w2, output)
+			#print(w1, w2, output)
 			try:
-				w1, w2 = w2, random.choice(cache[(w1, w2)])
+				w1, w2 = w2, random.choice(cache[(w1 + ' ' + w2)])
 			except KeyError:
 				#we've looked up a pair where the value is __END__
-				print("keyError", w1, w2)
+				#print("keyError", w1, w2)
 				output.append(w2)
 				return output
 
