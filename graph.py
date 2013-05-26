@@ -10,6 +10,10 @@ class Key(Node):
 class Link(Relationship):
 	label = "link"
 
+"""
+this tripletGenerator is for testing only!!!!
+everything below this comment is for testing
+"""
 def tripletGenerator():
 	#starts at the first word and goes forward
 	if len(s) < 3:
