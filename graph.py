@@ -14,7 +14,7 @@ class Link(Relationship):
 this tripletGenerator is for testing only!!!!
 everything below this comment is for testing
 """
-def tripletGenerator():
+def _tripletGenerator():
 	#starts at the first word and goes forward
 	if len(s) < 3:
 		return
@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
 	prev = ''
 	prevg = g.vertices.create(data=prev)
-	for words in tripletGenerator():
+	for words in _tripletGenerator():
 		curr = ' '.join(words)
 		print(curr)
 		currg = g.vertices.create(data=curr)
