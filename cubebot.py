@@ -18,12 +18,16 @@ else:
 animalsounds = ["meow", "woof", "moo"]
 animalsounds_set = set(animalsounds)
 
+stopwords = ["stop", "shut"]
+stopwords_set = set(stopwords)
+
 class CubeBot (sleekxmpp.ClientXMPP):
 
 	def __init__ (self, jid, password, room, nick, fileName):
 		sleekxmpp.ClientXMPP.__init__(self, jid, password)
 		self.room = room
 		self.nick = nick
+		self.chatty = 0 #woken up by having its username mentioned
 
 		#initialize markov chain with input file
 		inputFile = open(fileName)
@@ -76,10 +80,10 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		message_no_punct = []
 		for word in message:
 		 	message_no_punct.append(regex.sub('', word).lower())
-		return self.nick in message_no_punct
+		return self.nick in message_no_punct or (self.nick + "s") in message_no_punct
 
 	def sometimes(self):
-		return random.random() > 0.5
+		return random.random() > 0.3
 	
  	#parse incoming messages
 	def messageHandler(self, msg):
@@ -87,7 +91,6 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		#preprocess input
 		human_nick = msg['mucnick'] # whoever we're responding to
 		response = "" #initialize response
-		chatty = 0 #woken up by having its username mentioned
 		original_message_body = msg['body'].split()
 		message_body = self.removeItems(original_message_body)
 
@@ -100,7 +103,7 @@ class CubeBot (sleekxmpp.ClientXMPP):
 			#reply if username is mentioned
 			if self.botNickInText(original_message_body):
 				response = self.markov.generateText()
-				chatty = random.randint(0, 3)
+				self.chatty = random.randint(0, 3)
 
 			#reply if animal sounds are mentioned :)
 			elif any( word in animalsounds_set for word in message_body ):
@@ -108,12 +111,16 @@ class CubeBot (sleekxmpp.ClientXMPP):
 
 			else: #username is not mentioned
 				self.markov.addNewSentence(message_body)
-				if chatty:
-					if self.sometimes():
-						response = self.markov.generateText()
-						logging.info("AUTOREPLY")
-						chatty -= 1
 
+				#if told to stop, stop
+				if any ( word in stopwords_set for word in message_body ):
+					self.chatty = 0
+
+				#if chatty, say something
+				if self.chatty:
+					response = self.markov.generateText()
+					if self.sometimes():
+						self.chatty -= 1
 
 			#send finished response if it's been modified
 			self.sendMessage(msg, response)
