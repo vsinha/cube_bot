@@ -6,8 +6,8 @@ import random
 from itertools import chain
 #from wordpool import WordPool
 
-cacheFfile = "saveforward.pickle" 
-cacheRfile = "savereverse.pickle"
+cacheFfile = "save_forward.p" 
+cacheRfile = "save_reverse.p"
 
 class Markov (object):
 
@@ -24,7 +24,7 @@ class Markov (object):
 		self.counter = 0 #keep track of new entries to the db 
 		atexit.register(self.saveCache) #initialize saving at exit
 
-	#TODO get this to read chat log files
+	#TODO get this to read chat log files (either plaintext or html)
 	def loadFile(self, inputFile):
 		#for importing text from a file
 		logging.info("Generating markov cache")
@@ -50,7 +50,7 @@ class Markov (object):
 
 	#preprocesses the sentence (adds end tokens), and calls storeToDB()
 	def addNewSentence(self, sentence):
-		logging.info("adding new sentence: " + ' '.join(sentence))
+		logging.info("ADDING: " + ' '.join(sentence))
 		self.words = self.sentenceToWords(sentence)
 		self.storeToDB()
 
@@ -63,7 +63,7 @@ class Markov (object):
 			self.counter = 0 #reset the counter
 
 	def saveCache(self):
-		logging.info("Saving cache(s)")
+		logging.info("SAVING caches")
 		pickle.dump(self.cacheF, open(cacheFfile, "wb"))
 		pickle.dump(self.cacheR, open(cacheRfile, "wb"))
 
@@ -166,7 +166,6 @@ class Markov (object):
 				#print("keyError", w1, w2)
 				output.append(w2)
 				return output
-
 
 	#remove end tokens and make the list of words into a string
 	def stripTokens(self, response):
