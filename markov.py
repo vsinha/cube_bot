@@ -25,7 +25,7 @@ class Markov (object):
 		
 		self.Key = namedtuple("Key", ["key1", "key2"])
 		self.counter = 0 #keep track of new entries to the db 
-		atexit.register(self.saveCache) #initialize saving at exit
+		#atexit.register(self.saveCache) #initialize saving at exit
 
 	def loadFile(self, inputFile):
 		#for importing text from a file
@@ -100,7 +100,7 @@ class Markov (object):
 		self.database(self.forwardTripletGenerator(), self.cacheF)
 		self.database(self.reverseTripletGenerator(), self.cacheR)
 
-	def generateText2(self):
+	def generateText(self):
 		seedword = '__END__' #initialize wrong so we can enter the while loop
 		response = []
 
@@ -125,8 +125,14 @@ class Markov (object):
 			for word in second_half:
 				response.insert(0, word)
 
-			print(response)
+		response = self.stripTokens(response)
+		print(response)
+		return response
 
+	#remove end tokens and make the list of words into a string
+	def stripTokens(self, response):
+		sentence = [w for w in response if w != '__END__']
+		return ' '.join(sentence)
 
 	def gen(self, w1, w2, cache):
 		output = []
@@ -156,4 +162,4 @@ if __name__ == '__main__':
 	sentences.append("a truck has wheels")
 	for sentence in sentences:
 		m.addNewSentence(sentence.split())
-	m.generateText2()
+	m.generateText()
