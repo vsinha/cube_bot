@@ -126,7 +126,7 @@ class Markov (object):
 
 	"""
 	To generate text, we:
-		pick a seed word
+		pick a seed key (2 words)
 		generate text forwards and append
 		generate text backwards and prepend (flipping the order of the words)
 		return the completed sentence
@@ -136,37 +136,26 @@ class Markov (object):
 	stripTokens() also turns the list of words into a space-separated string
 	"""
 	def generateText(self):
-		seedword = '__END__' #initialize wrong so we can enter the while loop
 		response = []
 
-		while seedword == '__END__':
-			#start with a random word
-			#TODO add wordpool ring buffer functionality
-			#so we can chose a word based on room context
-			choice = random.choice(list(self.cacheF.keys()))
-			seedword = choice.key1
-			keyF = choice.key2
-		print ("seedword: ", seedword)
+		#start with a random word
+		#TODO add wordpool ring buffer functionality
+		seed = random.choice(list(self.cacheF.keys()))
+		print("seed: ", seed)
+		seedw1 = seed.key1
+		seedw2 = seed.key2
 
-		response.append(self.gen(seedword, keyF, self.cacheF))
+
+		response.append(self.gen(seedw1, seedw2, self.cacheF))
+		#we're left with [["word", "word2"]], this removes the outer brakets
 		response = list(chain.from_iterable(response))
-		response.pop(0)
+		#delete first two words from response because these are the key
+		del response[0:2] 
 		print("second half: ", response)
 
-		#needs to pick a key2 where key1 is our seedword
-		keys = self.cacheR.keys()
-		choices = [key for key in keys if key.key1==seedword]
-
-		#without this it doesn't append the first word if it's the seedword
-		if len(choices) == 0:
-			response.insert(0, seedword)
-
-		else:
-			choice = random.choice(choices)
-			keyR = choice.key2
-			second_half = self.gen(seedword, keyR, self.cacheR)
-			for word in second_half:
-				response.insert(0, word)
+		second_half = self.gen(seedw2, seedw1, self.cacheR)
+		for word in second_half:
+			response.insert(0, word)
 
 		response = self.stripTokens(response)
 		return response
@@ -175,8 +164,8 @@ class Markov (object):
 	def gen(self, w1, w2, cache):
 		output = []
 		while True:
-			print(w1, w2, output)
 			output.append(w1)
+			print(w1, w2, output)
 			try:
 				w1, w2 = w2, random.choice(cache[(w1, w2)])
 			except KeyError:
