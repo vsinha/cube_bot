@@ -1,4 +1,4 @@
-import os
+import os, sys
 from bulbs.neo4jserver import Graph
 from markov import Markov
 
@@ -32,10 +32,14 @@ class LogParser():
 
 	def buildPickledDB(self):
 		m = Markov()
-		for sentence in self.sentences:
+		for i,sentence in enumerate(self.sentences):
+			#print(str(i)+"/"+str(len(self.sentences)))
+			percent = (i*100/len(self.sentences))/100.
+			sys.stdout.write("\r%f%%" %percent)
 			m.addNewSentence(sentence)
-			print(sentence)
-		m.saveCache()
+			
+#			print(sentence)
+#		m.saveCache()
 
 
 	def parse(self, file):
@@ -58,6 +62,5 @@ if __name__ == '__main__':
 	lp = LogParser()
 	for root, dirs, files in os.walk("logs"):
 		for file in files:
-	#		print(file)
 			lp.parse("logs/"+file)
 	lp.buildPickledDB()
