@@ -105,11 +105,18 @@ class CubeBot (sleekxmpp.ClientXMPP):
 		original_message_body = msg['body'].split()
 		message_body = self.removeItems(original_message_body)
 
-		if message_body == "":
+		if message_body == []:
 			return
 
 		#always make sure the message we're replying to didn't come from self
 		if human_nick != self.nick:
+
+			if human_nick == 'viraj' and message_body == ["cube", "exit"]:
+				self.cleanShutDown()
+
+			#if told to stop, stop
+			if any ( word in stopwords_set for word in message_body ):
+				self.chatty = 0
 
 			#reply if username is mentioned
 			if self.botNickInText(original_message_body):
@@ -123,18 +130,19 @@ class CubeBot (sleekxmpp.ClientXMPP):
 			else: #username is not mentioned
 				self.markov.addNewSentence(message_body)
 
-				#if told to stop, stop
-				if any ( word in stopwords_set for word in message_body ):
-					self.chatty = 0
-
 				#if chatty, say something
 				if self.chatty:
-					response = self.markov.generateText()
 					if self.sometimes():
+						response = self.markov.generateText()
 						self.chatty -= 1
 
 			#send finished response if it's been modified
 			self.sendMessage(msg, response)
+
+	def cleanShutDown(self):
+		logging.info("Saving cache and quitting")
+		self.markov.saveCache()
+		sys.exit()
 	
 	def sendMessage(self, msg, response):
 		if response != "":
