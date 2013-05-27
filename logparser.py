@@ -17,7 +17,7 @@ class LogParser():
 		g = Graph()
 		root = g.vertices.create(data="__END__")
 		for sentence in self.sentences:
-			print(sentence)
+	#		print(sentence)
 			prev = root
 			for currentWord in sentence:
 				try:
@@ -33,8 +33,8 @@ class LogParser():
 	def buildPickledDB(self):
 		m = Markov()
 		for sentence in self.sentences:
-			#print(sentence)
 			m.addNewSentence(sentence)
+			print(sentence)
 		m.saveCache()
 
 
@@ -45,9 +45,10 @@ class LogParser():
 			if (line == "") or ("has set the topic to:" in line):
 				continue
 			words = line.split(" ")
+#			print(words)
 			self.sentences.append(words)
 		#self.buildGraph() # neo4j
-		self.buildPickledDB()
+		#self.buildPickledDB()
 
 
 	def get_numlines(self):
@@ -57,4 +58,6 @@ if __name__ == '__main__':
 	lp = LogParser()
 	for root, dirs, files in os.walk("logs"):
 		for file in files:
+	#		print(file)
 			lp.parse("logs/"+file)
+	lp.buildPickledDB()
