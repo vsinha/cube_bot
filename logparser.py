@@ -36,7 +36,7 @@ class LogParser():
 			sentence = " ".join(wordArray) # ironically have to stick my sentence array back together :|
 			print(sentence)
 			m.addNewSentence(sentence)
-		Markov.saveCache()
+		m.saveCache()
 
 
 	def parse(self, file):
