@@ -32,9 +32,8 @@ class LogParser():
 
 	def buildPickledDB(self):
 		m = Markov()
-		for wordArray in self.sentences:
-			sentence = " ".join(wordArray) # ironically have to stick my sentence array back together :|
-			print(sentence)
+		for sentence in self.sentences:
+			#print(sentence)
 			m.addNewSentence(sentence)
 		m.saveCache()
 
