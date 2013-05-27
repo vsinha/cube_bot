@@ -1,11 +1,9 @@
 import os
 from bulbs.neo4jserver import Graph
-from graph import Key, Link
 
 class LogParser():
 
 	def __init__(self):
-		g = Graph()
 		self.sentences = []
 
 	def stripMetadata(self, line):
@@ -15,19 +13,32 @@ class LogParser():
 		return line[divider+2:]
 
 	def buildGraph(self):
-		root = g.vertices.create(token="__END__")
-		
+		g = Graph()
+		root = g.vertices.create(data="__END__")
+		for sentence in self.sentences:
+			print(sentence)
+			prev = root
+			for currentWord in sentence:
+				try:
+					vertices = g.vertices.index.lookup(data=currentWord)
+					for v in vertices:
+						g.edges.create(prev, "link", v)
+				except TypeError:
+						v = g.vertices.create(data=currentWord)
+						g.edges.create(prev, "link", v)
+				prev = v
+				g.edges.create(prev, "link", root)
 
 
 	def parse(self, file):
 		f = open(file, 'r')
 		for line in f.readlines():
 			line = self.stripMetadata(line[0:-1])
-			if line == "":
+			if (line == "") or ("has set the topic to:" in line):
 				continue
 			words = line.split(" ")
 			self.sentences.append(words)
-		buildGraph(sentences)
+		self.buildGraph()
 
 	def get_numlines(self):
 		return self.numlines
