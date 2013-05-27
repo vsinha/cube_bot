@@ -1,5 +1,6 @@
 import os
 from bulbs.neo4jserver import Graph
+from markov import Markov
 
 class LogParser():
 
@@ -29,6 +30,14 @@ class LogParser():
 				prev = v
 				g.edges.create(prev, "link", root)
 
+	def buildPickledDB(self):
+		m = Markov()
+		for wordArray in self.sentences:
+			sentence = " ".join(wordArray) # ironically have to stick my sentence array back together :|
+			print(sentence)
+			m.addNewSentence(sentence)
+		Markov.saveCache()
+
 
 	def parse(self, file):
 		f = open(file, 'r')
@@ -38,7 +47,9 @@ class LogParser():
 				continue
 			words = line.split(" ")
 			self.sentences.append(words)
-		self.buildGraph()
+		#self.buildGraph() # neo4j
+		self.buildPickledDB()
+
 
 	def get_numlines(self):
 		return self.numlines
