@@ -34,7 +34,7 @@ class LogParser():
 		m = Markov()
 		for i,sentence in enumerate(self.sentences):
 			#print(str(i)+"/"+str(len(self.sentences)))
-			percent = (i*100/len(self.sentences))/100.
+			percent = (i*100./len(self.sentences))
 			sys.stdout.write("\r%f%%" %percent)
 			m.addNewSentence(sentence)
 			
