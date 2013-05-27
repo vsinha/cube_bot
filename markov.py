@@ -44,8 +44,8 @@ class Markov (object):
 
 	#appends and prepends special tokens
 	def sentenceToWords(self, words):
-		words.insert(0, '__END__') #prepend special word
-		words.append('__END__') #and append
+		if words[0] != '__END__': words.insert(0, '__END__') #prepend special word
+		if words[-1] != '__END__': words.append('__END__') #and append
 		return words
 
 	#preprocesses the sentence (adds end tokens), and calls storeToDB()
