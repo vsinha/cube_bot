@@ -18,16 +18,12 @@ else:
 animalsounds = ["meow", "woof", "moo"]
 animalsounds_set = set(animalsounds)
 
-stopwords = ["stop", "shut", "silence", "stfu"]
-stopwords_set = set(stopwords)
-
 class CubeBot (sleekxmpp.ClientXMPP):
 
 	def __init__ (self, jid, password, room, nick, fileName):
 		sleekxmpp.ClientXMPP.__init__(self, jid, password)
 		self.room = room
 		self.nick = nick
-		self.chatty = 0 #woken up by having its username mentioned
 
 		#initialize markov chain with input file
 		inputFile = open(fileName)
@@ -114,10 +110,6 @@ class CubeBot (sleekxmpp.ClientXMPP):
 			if human_nick == 'viraj' and message_body == ["cube", "exit"]:
 				self.cleanShutDown()
 
-			#if told to stop, stop
-			if any ( word in stopwords_set for word in message_body ):
-				self.chatty = 0
-
 			#reply if username is mentioned
 			if self.botNickInText(original_message_body):
 				response = self.markov.generateText()
@@ -129,12 +121,6 @@ class CubeBot (sleekxmpp.ClientXMPP):
 
 			else: #username is not mentioned
 				self.markov.addNewSentence(message_body)
-
-				#if chatty, say something
-#				if self.chatty:
-#					if self.sometimes():
-#						response = self.markov.generateText()
-#						self.chatty -= 1
 
 			#send finished response if it's been modified
 			self.sendMessage(msg, response)
