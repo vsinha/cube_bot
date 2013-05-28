@@ -36,11 +36,11 @@ class LogParser():
 			#print(str(i)+"/"+str(len(self.sentences)))
 			percent = (i*100./len(self.sentences))
 			sys.stdout.write("\r%f%%" %percent)
-			m.addNewSentence(sentence)
+			sentence = m.removeItems(sentence)
+			if sentence != []:
+				m.addNewSentence(sentence)
 			
-#			print(sentence)
-#		m.saveCache()
-
+		m.saveCache()
 
 	def parse(self, file):
 		f = open(file, 'r')
