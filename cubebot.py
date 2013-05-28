@@ -131,10 +131,10 @@ class CubeBot (sleekxmpp.ClientXMPP):
 				self.markov.addNewSentence(message_body)
 
 				#if chatty, say something
-				if self.chatty:
-					if self.sometimes():
-						response = self.markov.generateText()
-						self.chatty -= 1
+#				if self.chatty:
+#					if self.sometimes():
+#						response = self.markov.generateText()
+#						self.chatty -= 1
 
 			#send finished response if it's been modified
 			self.sendMessage(msg, response)
