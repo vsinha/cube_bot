@@ -16,19 +16,16 @@ class LogParser():
 	def buildGraph(self):
 		g = Graph()
 		root = g.vertices.create(data="__END__")
-		for sentence in self.sentences:
+		for i,sentence in enumerate(self.sentences):
 	#		print(sentence)
 			prev = root
 			for currentWord in sentence:
-				try:
-					vertices = g.vertices.index.lookup(data=currentWord)
-					for v in vertices:
-						g.edges.create(prev, "link", v)
-				except TypeError:
-						v = g.vertices.create(data=currentWord)
-						g.edges.create(prev, "link", v)
+				v = g.vertices.get_or_create("data",currentWord)
+				g.edges.create(prev, "link", v)
 				prev = v
-				g.edges.create(prev, "link", root)
+				percent = (i*100./len(self.sentences))
+				sys.stdout.write("\r%f%%" %percent)
+			g.edges.create(prev, "link", root)
 
 	def buildPickledDB(self):
 		m = Markov()
@@ -63,4 +60,4 @@ if __name__ == '__main__':
 	for root, dirs, files in os.walk("logs"):
 		for file in files:
 			lp.parse("logs/"+file)
-	lp.buildPickledDB()
+	lp.buildGraph()
