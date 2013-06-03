@@ -15,14 +15,18 @@ class LogParser():
 
 	def buildGraph(self):
 		g = Graph()
-		root = g.vertices.create(data="__END__")
+		allwords = {"__END__":g.vertices.create(data="__END__")}
+		root = allwords["__END__"]
 		for i,sentence in enumerate(self.sentences):
 	#		print(sentence)
 			prev = root
 			for currentWord in sentence:
-				v = g.vertices.get_or_create("data",currentWord)
-				g.edges.create(prev, "link", v)
-				prev = v
+				if currentWord not in allwords:
+					allwords[currentWord] = g.vertices.create(data=currentWord)
+				
+			#	v = g.vertices.get_or_create("data",currentWord)
+				g.edges.create(prev, "link", allwords[currentWord])
+				prev = allwords[currentWord]
 				percent = (i*100./len(self.sentences))
 				sys.stdout.write("\r%f%%" %percent)
 			g.edges.create(prev, "link", root)
