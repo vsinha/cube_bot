@@ -4,7 +4,7 @@ Cube
 
 ####Cube requires a file for settings:
 ```
-config.conf
+~/cube_bot/config.conf
 [cube]
 jid: cube@server.com
 password: p@ssword123
