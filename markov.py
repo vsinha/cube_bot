@@ -50,9 +50,10 @@ class Markov (object):
 
 	#preprocesses the sentence (adds end tokens), and calls storeToDB()
 	def addNewSentence(self, sentence):
-		logging.info("ADDING: " + ' '.join(sentence))
-		self.words = self.sentenceToWords(sentence)
-		self.storeToDB()
+		if len(sentence) != 0:
+			logging.info("ADDING: " + ' '.join(sentence))
+			self.words = self.sentenceToWords(sentence)
+			self.storeToDB()
 
 		#save the cache every n messages
 		#TODO this doesn't do anything because pickle needs help with tuples
