@@ -65,8 +65,15 @@ class Markov (object):
 
 	def saveCache(self):
 		logging.info("SAVING caches")
-		pickle.dump(self.cacheF, open(cacheFfile, "wb"))
-		pickle.dump(self.cacheR, open(cacheRfile, "wb"))
+		#make sure we handle files cleanly 
+		outputF = open(cacheFfile, "wb")
+		outputR = open(cacheRfile, "wb")
+
+		pickle.dump(self.cacheF, outputF)
+		pickle.dump(self.cacheR, outputR)
+
+		outputF.close()
+		outputR.close()
 
 	"""
 	triplet generators slice the sentence into triplets
